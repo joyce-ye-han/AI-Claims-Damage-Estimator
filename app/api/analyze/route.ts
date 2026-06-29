@@ -37,9 +37,28 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      message.includes("503") ||
+      message.includes("high demand") ||
+      message.includes("unavailable") ||
+      message.includes("429") ||
+      message.includes("resource exhausted")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The AI service is temporarily busy. Please wait a few seconds and try again.",
+        },
+        { status: 503 },
+      );
+    }
+
     console.error("Analyze error:", error);
     return NextResponse.json(
-      { error: "Analysis failed. Please try again with a clearer photo." },
+      {
+        error:
+          "Analysis failed. Please try again in a moment. If the issue persists, try a different photo or URL.",
+      },
       { status: 500 },
     );
   }
