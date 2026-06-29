@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Claims Damage Estimator
 
-## Getting Started
+A minimal full-stack prototype for an insurance claims workflow. Upload a damaged vehicle photo or paste an image URL to receive car metadata, a visible-damage summary, and a preliminary repair cost range powered by Google Gemini.
 
-First, run the development server:
+## Setup
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Copy the environment template and add your Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey):
+
+```bash
+cp .env.example .env.local
+```
+
+3. Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+User (browser)
+  → app/page.tsx
+  → POST /api/analyze (FormData: file OR imageUrl)
+  → lib/image.ts (normalize to base64 inline data)
+  → lib/gemini.ts (Gemini vision + JSON response)
+  → structured JSON back to UI
+```
 
-## Learn More
+- **Frontend**: one page at `app/page.tsx` with upload, URL input, preview, loading/error states, and result cards
+- **Backend**: one API route at `app/api/analyze/route.ts`
+- **AI**: `@google/genai` SDK, `gemini-2.5-flash` with fallback to `gemini-2.0-flash`
+- **No database, auth, queue, or extra pages**
 
-To learn more about Next.js, take a look at the following resources:
+## Demo flow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Upload a car damage photo **or** paste a public HTTPS image URL
+2. Click **Analyze damage**
+3. Review make/model/color, damage summary, cost range, assumptions, and recommended next step
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Limitations
 
-## Deploy on Vercel
+- Estimates are **preliminary only** and based on **visible damage** in a single photo
+- Accuracy depends on image quality, angle, and lighting
+- URL input requires a fetchable HTTPS image (server-side fetch)
+- No persistence — results are not saved
+- No human adjuster review workflow in v1
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Future improvements
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Auth
+- Object storage (S3/GCS) for uploaded claim photos
+- Claim history database
+- Repair pricing table / historical claims integration
+- Human adjuster review workflow
+- Audit logs
+- Evals against real adjuster outcomes
